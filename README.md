@@ -1,90 +1,299 @@
-import os
-import pandas as pd
-import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+# Car Price Prediction Using Machine Learning
+
+## Overview
+
+This project develops a machine learning pipeline for predicting used car prices based on vehicle characteristics such as manufacturing year, engine size, mileage, number of doors, owner count, fuel type, transmission type, brand, and model.
+
+The workflow includes:
+
+- Data loading and inspection
+- Data cleaning and preprocessing
+- Exploratory Data Analysis (EDA)
+- Feature engineering and categorical encoding
+- Correlation analysis
+- Linear Regression model training
+- Model evaluation using regression metrics
+- Visualization of predictions
+
+The goal is to understand which vehicle attributes influence car prices and build a predictive model capable of estimating market value.
+
+---
+
+## Dataset
+
+The dataset contains synthetic vehicle listings with the following features:
+
+| Feature | Description |
+|----------|-------------|
+| Brand | Vehicle manufacturer |
+| Model | Vehicle model |
+| Year | Manufacturing year |
+| Engine_Size | Engine displacement |
+| Fuel_Type | Petrol, Diesel, Electric, Hybrid |
+| Transmission | Manual, Automatic, Semi-Automatic |
+| Mileage | Distance driven |
+| Doors | Number of doors |
+| Owner_Count | Previous owners |
+| Price | Vehicle selling price (Target Variable) |
+
+### Example Record
+
+| Brand | Model | Year | Engine_Size | Fuel_Type | Transmission | Mileage | Price |
+|---------|---------|---------|-------------|------------|------------|---------|---------|
+| Kia | Rio | 2020 | 4.2 | Diesel | Manual | 289944 | 8501 |
+
+---
+
+## Project Structure
+
+```text
+.
+├── car_price_prediction.ipynb
+├── Car_Price_Dataset.csv
+├── README.md
+└── outputs/
+    ├── correlation_heatmap.png
+    ├── pairplot.png
+    └── prediction_scatterplot.png
+```
+
+---
+
+## Technologies Used
+
+### Programming Language
+
+- Python 3
+
+### Libraries
+
+```python
+numpy
+pandas
+matplotlib
+seaborn
+scikit-learn
+```
+
+---
+
+## Data Preprocessing
+
+Several preprocessing techniques were applied before model training:
+
+### Missing Value Check
+
+```python
+df.isnull().sum()
+```
+
+No missing values were detected in the dataset.
+
+### Categorical Encoding
+
+The following categorical variables were converted using one-hot encoding:
+
+- Brand
+- Model
+- Fuel_Type
+- Transmission
+
+```python
+pd.get_dummies()
+```
+
+### Feature Engineering
+
+The encoded dataset transforms textual vehicle attributes into numerical format suitable for machine learning algorithms.
+
+---
+
+## Exploratory Data Analysis
+
+### Correlation Heatmap
+
+A correlation matrix was generated to analyze relationships between numerical variables.
+
+Key observations:
+
+- Newer vehicles generally have higher prices.
+- Higher mileage tends to reduce vehicle value.
+- Engine size has a moderate positive relationship with price.
+- Owner count shows weak correlation with price.
+
+### Pairplot Analysis
+
+Pairwise visualizations were created for:
+
+- Year
+- Engine Size
+- Mileage
+- Price
+- Fuel Type
+
+This provides a better understanding of feature distributions and relationships.
+
+---
+
+## Machine Learning Model
+
+### Algorithm
+
+Linear Regression
+
+```python
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-import warnings
 
-# Suppress runtime layout and conversion warnings
-warnings.filterwarnings('ignore')
+model = LinearRegression()
+model.fit(X_train, y_train)
+```
 
-# Ensure inline plotting behavior within notebook instances
-# %matplotlib inline
+### Train-Test Split
 
-# =====================================================================
-# 1. SETUP AND REPOSITORIES DATA INGESTION
-# =====================================================================
-FILE_PATH = '/Users/anand/Documents/Datasets/car_price_dataset.csv'
+Dataset partition:
 
-if not os.path.exists(FILE_PATH):
-    print(f"[!] Warning: Baseline dataset not found at target path: '{FILE_PATH}'")
-    print("Please verify your file placement to ensure successful execution.")
-else:
-    # Load raw data from CSV
-    df = pd.read_csv(FILE_PATH)
-    print("--- Initial Raw Tabular Data Framework Preview ---")
-    print(df.head())
+```python
+80% Training
+20% Testing
+```
 
-    # =====================================================================
-    # 2. DATA ENGINEERING & MULTI-COLLINEARITY HANDLING
-    # =====================================================================
-    # Check for missing values across vectors
-    null_summary = df.isnull().sum()
-    
-    # Run categorical variable transformations via One-Hot Dummy encoding
-    # Use drop_first=True to resolve the Dummy Variable Trap (collinearity prevention)
-    df_encoded = pd.get_dummies(df, drop_first=True)
-    print("\n--- Encoded Feature Structural Matrix Post-Transform Preview ---")
-    print(df_encoded.head())
+Using:
 
-    # =====================================================================
-    # 3. MATRIX SEGMENTATION AND SEPARATED SPLITS
-    # =====================================================================
-    # Isolate variables matrix from target array label
-    X = df_encoded.drop('Price', axis=1)
-    y = df_encoded['Price']
+```python
+train_test_split(
+    X, y,
+    test_size=0.2,
+    random_state=42
+)
+```
 
-    # Generate 80/20 train/test structural validation split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.2, random_state=42
-    )
-    print(f"\nMatrix Allocation -> X_train: {X_train.shape} | X_test: {X_test.shape}")
+---
 
-    # =====================================================================
-    # 4. LINEAR REGRESSION TRAINING EXECUTION
-    # =====================================================================
-    # Initialize OLS (Ordinary Least Squares) linear architecture 
-    model = LinearRegression()
-    
-    # Optimize network parameters using training arrays
-    model.fit(X_train, y_train)
-    print("\n[+] Multiple Linear Regression Model Optimization Complete.")
+## Model Evaluation
 
-    # =====================================================================
-    # 5. PREDICTIVE INFERENCE AND EVALUATION METRICS
-    # =====================================================================
-    # Run test matrix through trained framework parameters
-    y_pred = model.predict(X_test)
+Performance metrics:
 
-    # Compute validation evaluation scores
-    mse = mean_squared_error(y_test, y_pred)
-    r2 = r2_score(y_test, y_pred)
+### Mean Squared Error (MSE)
 
-    print("\n--- Final Model Validation Metrics Summary ---")
-    print(f"Mean Squared Error (MSE) : {mse:.4f}")
-    print(f"R-squared (R2) Accuracy  : {r2:.4f}")
+```text
+4231.92
+```
 
-    # =====================================================================
-    # 6. RESIDUAL VISUALIZATION ANALYSIS
-    # =====================================================================
-    plt.figure(figsize=(10, 6))
-    sns.scatterplot(x=y_test, y=y_pred, alpha=0.6, color='b')
-    plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'r--', lw=2)
-    plt.title("Car Price Prediction: Actual vs. Predicted Values Plot")
-    plt.xlabel("Actual Car Sale Prices ($)")
-    plt.ylabel("Predicted Car Sale Prices ($)")
-    plt.grid(True, linestyle=":")
-    plt.show()
+### R² Score
+
+```text
+0.9995
+```
+
+The extremely high R² score indicates that the model explains nearly all variance in the target variable.
+
+---
+
+## Prediction Visualization
+
+Predicted prices were compared against actual prices using a scatter plot.
+
+```python
+plt.scatter(y_test, y_pred)
+```
+
+A strong linear relationship between actual and predicted values demonstrates excellent predictive performance.
+
+---
+
+## Workflow
+
+```text
+Load Dataset
+      ↓
+Inspect Data
+      ↓
+Check Missing Values
+      ↓
+Encode Categorical Features
+      ↓
+Perform EDA
+      ↓
+Generate Correlation Analysis
+      ↓
+Train/Test Split
+      ↓
+Train Linear Regression Model
+      ↓
+Predict Test Data
+      ↓
+Evaluate Model Performance
+      ↓
+Visualize Results
+```
+
+---
+
+## Running the Project
+
+### Clone Repository
+
+```bash
+git clone https://github.com/yourusername/car-price-prediction.git
+cd car-price-prediction
+```
+
+### Install Dependencies
+
+```bash
+pip install numpy pandas matplotlib seaborn scikit-learn
+```
+
+### Launch Notebook
+
+```bash
+jupyter notebook
+```
+
+Open:
+
+```text
+car_price_prediction.ipynb
+```
+
+Run all cells.
+
+---
+
+## Sample Output
+
+```text
+Mean Squared Error: 4231.92
+R-squared: 0.9995
+```
+
+---
+
+## Key Insights
+
+- Vehicle age significantly impacts price.
+- Mileage negatively affects resale value.
+- Larger engines generally correspond to higher prices.
+- Fuel type contributes differently to pricing trends.
+- Proper categorical encoding substantially improves model performance.
+
+---
+
+## Future Improvements
+
+- Implement Polynomial Regression
+- Compare Tree-Based Models
+- Apply Random Forest Regressor
+- Train XGBoost Regressor
+- Hyperparameter Optimization
+- Cross Validation
+- Feature Importance Analysis
+- Deploy as a web application using Flask or Streamlit
+
+---
+
+## Author
+
+Anand Narendran
+
+Machine Learning | Data Science | Predictive Analytics
